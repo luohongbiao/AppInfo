@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.appsys.dao.appversion.AppVersionMapper">
+	<select id="getAppVersionById" parameterType="int" resultType="AppVersion">
+		SELECT
+		(SELECT softwareName FROM app_info WHERE id=av.appid) AS appName,
+		av.versionNo versionNo,av.versionSize AS versionSize,
+		(SELECT valueName FROM data_dictionary WHERE typeCode='PUBLISH_STATUS' AND valueId=av.publishStatus) 
+		 AS publishStatusName,
+		av.downloadLink AS downloadLink,
+		av.modifyDate AS modifyDate,
+		av.apkFileName AS apkFileName,
+		av.appId AS appId
+		FROM app_version AS av
+		WHERE appId=#{id}
+	</select>
+	<insert id="addAppVersion" parameterType="AppVersion">
+		INSERT INTO app_version 
+		(appId,versionNo,versionInfo,publishStatus,downloadLink,
+		versionSize,createdBy,creationDate,modifyBy,modifyDate,apkLocPath,apkFileName)
+		VALUES (#{appId},#{versionNo},#{versionInfo},#{publishStatus},#{downloadLink},#{versionSize},#{createdBy},#{creationDate},
+		#{modifyBy},#{modifyDate},#{apkLocPath},#{apkFileName});
+	</insert>
+	<!-- 按照appid查找最新版本id -->
+	<select id="newId" parameterType="int" resultType="int">
+		SELECT id FROM app_version 
+		WHERE appId=#{id}
+		ORDER BY modifyDate DESC LIMIT 1 
+	</select>
+	<select id="getAppVersion" resultType="AppVersion" parameterType="int">
+		SELECT * FROM app_version WHERE  id=#{vid} and appId=#{aid}
+	</select>
+	<update id="delAppVersionById" parameterType="int">
+		UPDATE app_version
+		<set>
+			downloadLink='',apkLocPath='',apkFileName=''
+		</set>
+		WHERE id=#{id}
+	</update>
+	<update id="modifyAppVersion" parameterType="AppVersion">
+		UPDATE app_version 
+		<set>
+			versionInfo=#{versionInfo},
+			versionSize=#{versionSize},
+			publishStatus=#{publishStatus},
+			downloadLink=#{downloadLink},
+			modifyBy=#{modifyBy},
+			modifyDate=#{modifyDate},
+			apkLocPath=#{apkLocPath},
+			apkFileName=#{apkFileName} 
+		</set>
+		where id=#{id};
+	</update>
+	<update id="modify" parameterType="AppVersion">
+		UPDATE app_version 
+		<set>
+			publishStatus=#{publishStatus},createdBy=#{createdBy},creationDate=#{creationDate}
+		</set>
+		WHERE id=#{id}
+	</update>
+	<delete id="delVersion" parameterType="int">
+		DELETE FROM app_version WHERE appId=#{appId}
+	</delete>
+</mapper>
